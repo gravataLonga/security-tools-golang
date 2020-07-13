@@ -1,15 +1,19 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net"
 	"sort"
 )
 
+var workerQuantity = flag.Int("worker",20, "How many worker do you want")
+var domain = flag.String("domain", "scanme.nmap.org", "Which domain you want scan")
+
 func worker(ports, results chan int) {
 	for p := range ports {
-		address := fmt.Sprintf("scanme.nmap.org:%d", p)
+		address := fmt.Sprintf("%v:%d", *domain, p)
 		log.Println(address)
 		conn, err := net.Dial("tcp", address)
 
@@ -23,7 +27,8 @@ func worker(ports, results chan int) {
 }
 
 func main() {
-	ports := make(chan int, 5)
+	flag.Parse()
+	ports := make(chan int, *workerQuantity)
 	results := make(chan int)
 	var openports []int
 
@@ -32,7 +37,7 @@ func main() {
 	}
 
 	go func() {
-		for i := 1; i <= 1024; i++ {
+		for i := 1; i <= 65535; i++ {
 			log.Println("Scan Port")
 			ports <- i
 		}
